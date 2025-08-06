@@ -7,6 +7,8 @@ namespace App\Services;
 use App\Services\Vendors\Contracts\VendorInterface;
 use App\Services\DataManagement\DataManager;
 use App\DTOs\Vendor\SearchCriteria;
+use App\Http\Responses\TravelSearchResponse;
+use App\Http\Resources\TravelSearchResource;
 use Illuminate\Support\Collection;
 
 /**
@@ -30,17 +32,17 @@ class TravelSearchService
         return $this;
     }
 
-    public function searchHotels(SearchCriteria $criteria): array
+    public function searchHotels(SearchCriteria $criteria): TravelSearchResponse
     {
         return $this->performSearch('searchHotels', $criteria);
     }
 
-    public function searchFlights(SearchCriteria $criteria): array
+    public function searchFlights(SearchCriteria $criteria): TravelSearchResponse
     {
         return $this->performSearch('searchFlights', $criteria);
     }
 
-    private function performSearch(string $method, SearchCriteria $criteria): array
+    private function performSearch(string $method, SearchCriteria $criteria): TravelSearchResponse
     {
         $results = [];
         $errors = [];
@@ -61,16 +63,16 @@ class TravelSearchService
             }
         }
 
-        return [
-            'results' => $results,
-            'result_count' => count($results),
-            'vendors_searched' => $vendorsSearched,
-            'errors' => $errors,
-            'search_metadata' => [
+        return TravelSearchResponse::success(
+            data: TravelSearchResource::collection($results),
+            resultCount: count($results),
+            vendorsSearched: $vendorsSearched,
+            searchMetadata: [
                 'search_time' => now()->toISOString(),
                 'cache_ttl' => 300,
             ],
-        ];
+            errors: $errors
+        );
     }
 
     private function getAvailableVendors(): Collection
@@ -78,13 +80,5 @@ class TravelSearchService
         return $this->vendors->filter(fn(VendorInterface $vendor): bool => $vendor->isAvailable());
     }
 
-    public function getRegisteredVendors(): Collection
-    {
-        return $this->vendors;
-    }
-
-    public function getDataManager(): DataManager
-    {
-        return $this->dataManager;
-    }
+ 
 }

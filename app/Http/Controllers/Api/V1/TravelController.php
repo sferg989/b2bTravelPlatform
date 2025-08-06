@@ -3,13 +3,11 @@
 declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
-
+use App\Http\Responses\TravelSearchResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\TravelSearchRequest;
-use App\Http\Resources\TravelSearchResource;
 use App\Services\TravelSearchService;
 use App\DTOs\Vendor\SearchCriteria;
-use Illuminate\Http\JsonResponse;
 
 /**
  * API Controller for travel search operations
@@ -26,7 +24,7 @@ class TravelController extends Controller
      * 
      * @endpoint GET /api/v1/travel/hotels/search
      */
-    public function searchHotels(TravelSearchRequest $request): JsonResponse
+    public function searchHotels(TravelSearchRequest $request): TravelSearchResponse
     {
         $criteria = new SearchCriteria(
             searchType: 'hotel',
@@ -38,24 +36,7 @@ class TravelController extends Controller
             maxResults: $request->integer('max_results', 50),
         );
 
-        $results = $this->travelSearchService->searchHotels($criteria);
-
-        return response()->json([
-            'success' => true,
-            'data' => TravelSearchResource::collection($results['results']),
-            'meta' => [
-                'result_count' => $results['result_count'],
-                'vendors_searched' => $results['vendors_searched'],
-                'search_metadata' => $results['search_metadata'],
-                'errors' => $results['errors'],
-                'architecture_version' => 'v1',
-                'data_management' => [
-                    'registered_transformers' => $this->travelSearchService
-                        ->getDataManager()
-                        ->getSupportedVendors(),
-                ],
-            ],
-        ]);
+        return $this->travelSearchService->searchHotels($criteria);
     }
 
     /**
@@ -63,7 +44,7 @@ class TravelController extends Controller
      * 
      * @endpoint GET /api/v1/travel/flights/search
      */
-    public function searchFlights(TravelSearchRequest $request): JsonResponse
+    public function searchFlights(TravelSearchRequest $request): TravelSearchResponse
     {
         $criteria = new SearchCriteria(
             searchType: 'flight',
@@ -76,53 +57,7 @@ class TravelController extends Controller
             maxResults: $request->integer('max_results', 50),
         );
 
-        $results = $this->travelSearchService->searchFlights($criteria);
-
-        return response()->json([
-            'success' => true,
-            'data' => TravelSearchResource::collection($results['results']),
-            'meta' => [
-                'result_count' => $results['result_count'],
-                'vendors_searched' => $results['vendors_searched'],
-                'search_metadata' => $results['search_metadata'],
-                'errors' => $results['errors'],
-                'architecture_version' => 'v1',
-                'data_management' => [
-                    'registered_transformers' => $this->travelSearchService
-                        ->getDataManager()
-                        ->getSupportedVendors(),
-                ],
-            ],
-        ]);
+        return $this->travelSearchService->searchFlights($criteria);
     }
 
-    /**
-     * Get system health and vendor status
-     * 
-     * @endpoint GET /api/v1/travel/health
-     */
-    public function health(): JsonResponse
-    {
-        $vendors = $this->travelSearchService->getRegisteredVendors();
-        $dataManager = $this->travelSearchService->getDataManager();
-        
-        $vendorStatus = [];
-        foreach ($vendors as $vendor) {
-            $vendorStatus[$vendor->getVendorCode()] = [
-                'name' => $vendor->getVendorName(),
-                'available' => $vendor->isAvailable(),
-                'has_transformer' => $dataManager->hasTransformer($vendor->getVendorCode()),
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'architecture_version' => 'v1',
-                'vendors' => $vendorStatus,
-                'transformers' => $dataManager->getSupportedVendors(),
-                'timestamp' => now()->toISOString(),
-            ],
-        ]);
-    }
 }

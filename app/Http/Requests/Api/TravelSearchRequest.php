@@ -41,8 +41,8 @@ class TravelSearchRequest extends FormRequest
         // Flight-specific rules
         if ($this->is('*/flights/search')) {
             return array_merge($baseRules, [
-                'origin' => 'required|string|size:3', // IATA airport code
-                'destination' => 'required|string|size:3', // IATA airport code
+                'origin' => 'required|string|size:3', 
+                'destination' => 'required|string|size:3', 
                 'departure_date' => 'required|date|after_or_equal:today',
                 'return_date' => 'required|date|after:departure_date',
                 'passenger_count' => 'sometimes|integer|min:1|max:9',

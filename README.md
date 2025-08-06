@@ -1,14 +1,37 @@
 # B2B Travel Platform
 
+## 🎯 Requirements : 
+### Premise: 
+- Build V1 of a B2B Travel platform
+### Objectives: 
+- Archetecht a system that handles multiple 3rd party data platforms.  
+- The 3rd party data will be in different shapes, and formats.
+- Build examples for 2 different formats
+### 🎯 Tech Requirements : 
+- Laravel
+
 ## 🎯 Implementation Overview
 
 This is a Mock  implementation :
 
 - **Multiple Data Formats**: JSON (Fergusontravel) and XML (StephensTravel) vendor integration  
-- **SOLID Principles**: Interface-based design with dependency injection
-- **Clean Architecture**: Clear separation of concerns with DTOs, transformers, and services
+- **Principles**: Interface-based design with dependency injection
+ Clear separation of concerns with Data Transformation Object(DTO), and services
 - **Unified API**: Single endpoint exposing aggregated multi-vendor data
 
+## 🏗️ Decisions. 
+- I wanted a Single Travel Search service that all requests would go through.  Flights and hotels take the argument type.  
+- I wanted a unified request and return Typing. travelSearchResponse && TravelSearchRequest. to create a contract. 
+- VendorService Provider. - I wanted a single place for all vendors to be registered.
+- I used singletons to not create multiple instances of a Class.
+- There needed to be a DataTransformerInterface that created a contract between all the vendors.
+- I used 1 typing for SearchCriteria for simplicity.  
+- TravelSearchResource - I wanted the reponse to be unified.  Not a generic.
+
+
+
+
+- 
 ## 🏗️ Data Flow
 
 ```
@@ -55,12 +78,6 @@ app/
 
 ## ✨ Key Implementation Details
 
-### Type Safety Demonstration
-- **Strict Types**: All files use `declare(strict_types=1)`
-- **Typed Properties**: DTOs use readonly typed properties (PHP 8.1+)
-- **Method Signatures**: Type hints for all parameters and return types
-- **Interface Contracts**: Enforced vendor implementations
-
 ### Multi-Format Data Handling
 - **JSON Format**: FergusontravelVendor with mock GraphQL-style responses
 - **XML Format**: StephensTravelVendor with SimpleXML processing
@@ -68,19 +85,6 @@ app/
 - **Strategy Pattern**: DataManager orchestrates format-specific transformers
 
 
-## 🚀 Quick Test
-
-The implementation uses mock data for demonstration. Simply install and test:
-
-```bash
-# Install dependencies
-composer install
-
-# Test the API endpoints
-GET /api/v1/travel/hotels/search?destination=Miami&check_in_date=2024-02-01&check_out_date=2024-02-05
-GET /api/v1/travel/flights/search?origin=JFK&destination=LAX&departure_date=2024-02-01&return_date=2024-02-08
-GET /api/v1/travel/health
-```
 
 The endpoints will return mock data processed through both JSON and XML transformers, demonstrating the type-safe multi-format aggregation.
 
