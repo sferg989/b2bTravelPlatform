@@ -31,7 +31,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 |
 */
 
-Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
     
     // Hotel search
     Route::get('travel/hotels/search', [TravelController::class, 'searchHotels'])

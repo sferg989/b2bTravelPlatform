@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\DataManagement;
 
 use App\Services\DataManagement\Contracts\DataTransformerInterface;
+use App\DTOs\StandardizedData\StandardizedHotel;
+use App\DTOs\StandardizedData\StandardizedFlight;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 
@@ -40,7 +42,7 @@ class DataManager
      * 
      * @param string $vendorCode Vendor identifier
      * @param mixed $vendorData Raw vendor data
-     * @return array Standardized data
+     * @return StandardizedHotel[] Standardized hotel data
      * @throws InvalidArgumentException If vendor transformer not found
      */
     public function transformHotelSearchResponse(string $vendorCode, mixed $vendorData): array
@@ -61,7 +63,7 @@ class DataManager
      * 
      * @param string $vendorCode Vendor identifier
      * @param mixed $vendorData Raw vendor data
-     * @return array Standardized data
+     * @return StandardizedFlight[] Standardized flight data
      * @throws InvalidArgumentException If vendor transformer not found
      */
     public function transformFlightSearchResponse(string $vendorCode, mixed $vendorData): array
@@ -82,10 +84,10 @@ class DataManager
      * 
      * @param string $vendorCode Vendor identifier
      * @param mixed $vendorData Raw vendor data
-     * @return array Standardized data
+     * @return StandardizedHotel Standardized hotel data
      * @throws InvalidArgumentException If vendor transformer not found
      */
-    public function transformHotelDetails(string $vendorCode, mixed $vendorData): array
+    public function transformHotelDetails(string $vendorCode, mixed $vendorData): StandardizedHotel
     {
         $transformer = $this->getTransformer($vendorCode);
         
@@ -103,10 +105,10 @@ class DataManager
      * 
      * @param string $vendorCode Vendor identifier
      * @param mixed $vendorData Raw vendor data
-     * @return array Standardized data
+     * @return StandardizedFlight Standardized flight data
      * @throws InvalidArgumentException If vendor transformer not found
      */
-    public function transformFlightDetails(string $vendorCode, mixed $vendorData): array
+    public function transformFlightDetails(string $vendorCode, mixed $vendorData): StandardizedFlight
     {
         $transformer = $this->getTransformer($vendorCode);
         

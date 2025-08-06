@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\DataManagement\Contracts;
 
+use App\DTOs\StandardizedData\StandardizedHotel;
+use App\DTOs\StandardizedData\StandardizedFlight;
+
 /**
  * Contract for all vendor data transformers
  * Defines the common interface for transforming vendor-specific data
@@ -15,7 +18,7 @@ interface DataTransformerInterface
      * Transform vendor-specific hotel search response into standardized format
      * 
      * @param mixed $vendorData Raw data from vendor API (array, XML, JSON, etc.)
-     * @return array Standardized hotel search results
+     * @return StandardizedHotel[] Standardized hotel search results
      * @throws \App\Exceptions\DataTransformationException
      */
     public function transformHotelSearchResponse(mixed $vendorData): array;
@@ -24,7 +27,7 @@ interface DataTransformerInterface
      * Transform vendor-specific flight search response into standardized format
      * 
      * @param mixed $vendorData Raw data from vendor API (array, XML, JSON, etc.)
-     * @return array Standardized flight search results
+     * @return StandardizedFlight[] Standardized flight search results
      * @throws \App\Exceptions\DataTransformationException
      */
     public function transformFlightSearchResponse(mixed $vendorData): array;
@@ -33,19 +36,19 @@ interface DataTransformerInterface
      * Transform detailed hotel information into standardized format
      * 
      * @param mixed $vendorData Raw hotel details from vendor API
-     * @return array Standardized hotel details
+     * @return StandardizedHotel Standardized hotel details
      * @throws \App\Exceptions\DataTransformationException
      */
-    public function transformHotelDetails(mixed $vendorData): array;
+    public function transformHotelDetails(mixed $vendorData): StandardizedHotel;
 
     /**
      * Transform detailed flight information into standardized format
      * 
      * @param mixed $vendorData Raw flight details from vendor API
-     * @return array Standardized flight details
+     * @return StandardizedFlight Standardized flight details
      * @throws \App\Exceptions\DataTransformationException
      */
-    public function transformFlightDetails(mixed $vendorData): array;
+    public function transformFlightDetails(mixed $vendorData): StandardizedFlight;
 
     /**
      * Get the vendor code this transformer supports

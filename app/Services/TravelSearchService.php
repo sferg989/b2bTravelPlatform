@@ -7,8 +7,8 @@ namespace App\Services;
 use App\Services\Vendors\Contracts\VendorInterface;
 use App\Services\DataManagement\DataManager;
 use App\DTOs\Vendor\SearchCriteria;
-use App\Http\Responses\TravelSearchResponse;
 use App\Http\Resources\TravelSearchResource;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 
 /**
@@ -32,17 +32,17 @@ class TravelSearchService
         return $this;
     }
 
-    public function searchHotels(SearchCriteria $criteria): TravelSearchResponse
+    public function searchHotels(SearchCriteria $criteria): JsonResponse
     {
         return $this->performSearch('searchHotels', $criteria);
     }
 
-    public function searchFlights(SearchCriteria $criteria): TravelSearchResponse
+    public function searchFlights(SearchCriteria $criteria): JsonResponse
     {
         return $this->performSearch('searchFlights', $criteria);
     }
 
-    private function performSearch(string $method, SearchCriteria $criteria): TravelSearchResponse
+    private function performSearch(string $method, SearchCriteria $criteria): JsonResponse
     {
         $results = [];
         $errors = [];
@@ -54,7 +54,11 @@ class TravelSearchService
                 $vendorsSearched[] = $vendor->getVendorCode();
 
                 if ($response->success) {
-                    $results = array_merge($results, $response->data);
+                    
+                    $dataAsArrays = array_map(function ($dto) {
+                        return $dto->toArray();
+                    }, $response->data);
+                    $results = array_merge($results, $dataAsArrays);
                 } else {
                     $errors[$vendor->getVendorCode()] = $response->errorMessage;
                 }
@@ -63,16 +67,19 @@ class TravelSearchService
             }
         }
 
-        return TravelSearchResponse::success(
-            data: TravelSearchResource::collection($results),
-            resultCount: count($results),
-            vendorsSearched: $vendorsSearched,
-            searchMetadata: [
-                'search_time' => now()->toISOString(),
-                'cache_ttl' => 300,
+        return response()->json([
+            'success' => true,
+            'data' => TravelSearchResource::collection($results),
+            'meta' => [
+                'result_count' => count($results),
+                'vendors_searched' => $vendorsSearched,
+                'search_metadata' => [
+                    'search_time' => now()->toISOString(),
+                    'cache_ttl' => 300,
+                ],
+                'errors' => $errors
             ],
-            errors: $errors
-        );
+        ]);
     }
 
     private function getAvailableVendors(): Collection

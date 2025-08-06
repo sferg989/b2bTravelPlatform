@@ -27,6 +27,8 @@ This is a Mock  implementation :
 - There needed to be a DataTransformerInterface that created a contract between all the vendors.
 - I used 1 typing for SearchCriteria for simplicity.  
 - TravelSearchResource - I wanted the reponse to be unified.  Not a generic.
+- merge the results from different vendors in Travel Search Service
+
 
 
 

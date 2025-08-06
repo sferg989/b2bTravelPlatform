@@ -18,8 +18,8 @@ class TravelSearchResource extends JsonResource
         return [
             'id' => $this->resource['external_id'],
             'vendor_code' => $this->resource['vendor_code'],
-            'name' => $this->resource['name'],
-            'description' => $this->truncateDescription($this->resource['description'] ?? ''),
+            'name' => $this->getName(),
+            'description' => $this->getDescription(),
             'location' => [
                 'address' => $this->formatAddress($this->resource['address'] ?? []),
                 'coordinates' => $this->resource['coordinates'] ?? null,
@@ -226,5 +226,26 @@ class TravelSearchResource extends JsonResource
         // This would need access to check-in/check-out dates to calculate properly
         // For now, return the total amount as a placeholder
         return $totalAmount;
+    }
+
+    private function getName(): string
+    {
+        // Check if this is flight data (has airline_code) or hotel data (has name)
+        if (isset($this->resource['airline_code'])) {
+            return $this->resource['airline_code'] . ' ' . $this->resource['flight_number'];
+        }
+        
+        return $this->resource['name'] ?? '';
+    }
+
+    private function getDescription(): string
+    {
+        // For flights, create a description from route information
+        if (isset($this->resource['airline_code'])) {
+            $route = ($this->resource['departure_airport'] ?? '') . ' → ' . ($this->resource['arrival_airport'] ?? '');
+            return "Flight from {$route}";
+        }
+        
+        return $this->truncateDescription($this->resource['description'] ?? '');
     }
 }

@@ -5,6 +5,13 @@ declare(strict_types=1);
 namespace App\Services\DataManagement\Transformers;
 
 use App\Services\DataManagement\Contracts\DataTransformerInterface;
+use App\DTOs\StandardizedData\StandardizedHotel;
+use App\DTOs\StandardizedData\StandardizedFlight;
+use App\DTOs\StandardizedData\Address;
+use App\DTOs\StandardizedData\Coordinates;
+use App\DTOs\StandardizedData\Amenity;
+use App\DTOs\StandardizedData\Availability;
+use App\DTOs\StandardizedData\Price;
 use InvalidArgumentException;
 
 /**
@@ -21,33 +28,39 @@ class FergusontravelTransformer implements DataTransformerInterface
 
         $hotels = $vendorData['data']['hotelSearch']['hotels'] ?? [];
 
-        return array_map(fn(array $hotel): array => [
-            'external_id' => $hotel['id'] ?? '',
-            'vendor_code' => $this->getVendorCode(),
-            'name' => $hotel['name'] ?? '',
-            'description' => $hotel['description'] ?? '',
-            'address' => [
-                'street' => $hotel['address']['street'] ?? '',
-                'city' => $hotel['address']['city'] ?? '',
-                'country' => $hotel['address']['country'] ?? '',
-            ],
-            'coordinates' => [
-                'latitude' => (float) ($hotel['address']['coordinates']['latitude'] ?? 0),
-                'longitude' => (float) ($hotel['address']['coordinates']['longitude'] ?? 0),
-            ],
-            'star_rating' => (int) ($hotel['starRating'] ?? 0),
-            'amenities' => array_map(fn(string $amenity): array => [
-                'name' => $amenity,
-                'category' => 'general',
-            ], $hotel['amenities'] ?? []),
-            'availability' => [
-                'is_available' => !empty($hotel['availability']),
-                'price' => [
-                    'amount' => (float) ($hotel['availability']['price']['amount'] ?? 0),
-                    'currency' => $hotel['availability']['price']['currency'] ?? 'USD',
-                ],
-            ],
-        ], $hotels);
+        return array_map(fn(array $hotel): StandardizedHotel => 
+            new StandardizedHotel(
+                externalId: $hotel['id'] ?? '',
+                vendorCode: $this->getVendorCode(),
+                name: $hotel['name'] ?? '',
+                description: $hotel['description'] ?? '',
+                address: new Address(
+                    street: $hotel['address']['street'] ?? '',
+                    city: $hotel['address']['city'] ?? '',
+                    country: $hotel['address']['country'] ?? '',
+                ),
+                coordinates: new Coordinates(
+                    latitude: (float) ($hotel['address']['coordinates']['latitude'] ?? 0),
+                    longitude: (float) ($hotel['address']['coordinates']['longitude'] ?? 0),
+                ),
+                starRating: (int) ($hotel['starRating'] ?? 0),
+                amenities: array_map(fn(string $amenity): Amenity => 
+                    new Amenity(
+                        name: $amenity,
+                        category: 'general',
+                    ), 
+                    $hotel['amenities'] ?? []
+                ),
+                availability: new Availability(
+                    isAvailable: !empty($hotel['availability']),
+                    price: new Price(
+                        amount: (float) ($hotel['availability']['price']['amount'] ?? 0),
+                        currency: $hotel['availability']['price']['currency'] ?? 'USD',
+                    ),
+                ),
+            ), 
+            $hotels
+        );
     }
 
     public function transformFlightSearchResponse(mixed $vendorData): array
@@ -58,33 +71,44 @@ class FergusontravelTransformer implements DataTransformerInterface
 
         $flights = $vendorData['data']['flightSearch']['flights'] ?? [];
 
-        return array_map(fn(array $flight): array => [
-            'external_id' => $flight['id'] ?? '',
-            'vendor_code' => $this->getVendorCode(),
-            'airline_code' => $flight['airline'] ?? '',
-            'flight_number' => $flight['flightNumber'] ?? '',
-            'departure_airport' => $flight['departure']['airport'] ?? '',
-            'arrival_airport' => $flight['arrival']['airport'] ?? '',
-            'departure_datetime' => $flight['departure']['dateTime'] ?? '',
-            'arrival_datetime' => $flight['arrival']['dateTime'] ?? '',
-            'availability' => [
-                'is_available' => !empty($flight['pricing']),
-                'price' => [
-                    'amount' => (float) ($flight['pricing']['amount'] ?? 0),
-                    'currency' => $flight['pricing']['currency'] ?? 'USD',
-                ],
-            ],
-        ], $flights);
+        return array_map(fn(array $flight): StandardizedFlight => 
+            new StandardizedFlight(
+                externalId: $flight['id'] ?? '',
+                vendorCode: $this->getVendorCode(),
+                airlineCode: $flight['airline'] ?? '',
+                flightNumber: $flight['flightNumber'] ?? '',
+                departureAirport: $flight['departure']['airport'] ?? '',
+                arrivalAirport: $flight['arrival']['airport'] ?? '',
+                departureDateTime: $flight['departure']['dateTime'] ?? '',
+                arrivalDateTime: $flight['arrival']['dateTime'] ?? '',
+                availability: new Availability(
+                    isAvailable: !empty($flight['pricing']),
+                    price: new Price(
+                        amount: (float) ($flight['pricing']['amount'] ?? 0),
+                        currency: $flight['pricing']['currency'] ?? 'USD',
+                    ),
+                ),
+            ), 
+            $flights
+        );
     }
 
-    public function transformHotelDetails(mixed $vendorData): array
+    public function transformHotelDetails(mixed $vendorData): StandardizedHotel
     {
-        return $this->transformHotelSearchResponse(['data' => ['hotelSearch' => ['hotels' => [$vendorData]]]])[0] ?? [];
+        $hotels = $this->transformHotelSearchResponse(['data' => ['hotelSearch' => ['hotels' => [$vendorData]]]]);
+        if (empty($hotels)) {
+            throw new InvalidArgumentException('No hotel data found in vendor response');
+        }
+        return $hotels[0];
     }
 
-    public function transformFlightDetails(mixed $vendorData): array
+    public function transformFlightDetails(mixed $vendorData): StandardizedFlight
     {
-        return $this->transformFlightSearchResponse(['data' => ['flightSearch' => ['flights' => [$vendorData]]]])[0] ?? [];
+        $flights = $this->transformFlightSearchResponse(['data' => ['flightSearch' => ['flights' => [$vendorData]]]]);
+        if (empty($flights)) {
+            throw new InvalidArgumentException('No flight data found in vendor response');
+        }
+        return $flights[0];
     }
 
     public function getVendorCode(): string

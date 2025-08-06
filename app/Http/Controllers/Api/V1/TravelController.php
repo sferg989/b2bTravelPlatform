@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
-use App\Http\Responses\TravelSearchResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\TravelSearchRequest;
 use App\Services\TravelSearchService;
 use App\DTOs\Vendor\SearchCriteria;
+use Illuminate\Http\JsonResponse;
 
 /**
  * API Controller for travel search operations
@@ -24,7 +24,7 @@ class TravelController extends Controller
      * 
      * @endpoint GET /api/v1/travel/hotels/search
      */
-    public function searchHotels(TravelSearchRequest $request): TravelSearchResponse
+    public function searchHotels(TravelSearchRequest $request): JsonResponse
     {
         $criteria = new SearchCriteria(
             searchType: 'hotel',
@@ -44,7 +44,7 @@ class TravelController extends Controller
      * 
      * @endpoint GET /api/v1/travel/flights/search
      */
-    public function searchFlights(TravelSearchRequest $request): TravelSearchResponse
+    public function searchFlights(TravelSearchRequest $request): JsonResponse
     {
         $criteria = new SearchCriteria(
             searchType: 'flight',
